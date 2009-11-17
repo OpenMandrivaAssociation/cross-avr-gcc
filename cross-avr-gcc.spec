@@ -443,7 +443,7 @@ Conflicts:	gcc-cpp < 3.2.2-4mdk
 %endif
 %define binutils_version 2.16.91.0.2-2mdk
 %if %{use_hash_style_gnu}
-%define binutils_version 2.16.91.0.7-6mdk
+%define binutils_version 2.19.51.0.2-1mnb2
 %endif
 Requires:	%{cross_prefix}binutils >= %{binutils_version}
 BuildRequires:	%{cross_prefix}binutils >= %{binutils_version}
