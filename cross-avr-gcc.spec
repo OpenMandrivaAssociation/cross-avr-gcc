@@ -2,12 +2,14 @@
 %define _host_vendor manbo
 %define _real_vendor manbo
 
+%define cross_bootstrap		avr
+
 %define name			%{cross_prefix}gcc%{package_suffix}
 %define branch			4.4
 %define branch_tag		%(perl -e 'printf "%%02d%%02d", split(/\\./,shift)' %{branch})
 %define version			4.4.1
 %define snapshot		%nil
-%define release			%{manbo_mkrel 4}
+%define release			%{manbo_mkrel 1}
 %define nof_arches		noarch
 %define spu_arches		ppc64
 %define lsb_arches		i386 x86_64 ia64 ppc ppc64 s390 s390x mips mipsel mips64 mips64el
@@ -77,7 +79,7 @@
 %if %{build_cross}
 %define alternative_priority	10%{branch_tag}
 %define cross_prefix		cross-%{target_cpu}-
-%define cross_program_prefix	%{target_cpu}-linux-
+%define cross_program_prefix	%{target_cpu}-
 %if "%{target_cpu}" == "spu"
 %define cross_program_prefix	%{target_cpu}-unknown-elf-
 %endif
@@ -121,7 +123,7 @@
 %if %{build_cross}
 %define biarches		noarch
 %define arch			%{target_cpu}
-%define gcc_target_platform	%{target_cpu}-linux
+%define gcc_target_platform	%{target_cpu}
 %if "%{target_cpu}" == "spu"
 %define gcc_target_platform	%{target_cpu}-unknown-elf
 %endif
@@ -300,7 +302,7 @@
 %define build_pdf_doc		0
 %define build_check		0
 %define build_ada		0
-%define build_cxx		0
+#define build_cxx		0
 %define build_fortran		0
 %define build_objc		0
 %define build_objcp		0
@@ -319,6 +321,7 @@
 %define build_ada		0
 %define build_libffi		0
 %define build_libmudflap	0
+%define build_libgcj_bc		0
 %endif
 %if !%{libc_shared}
 %define build_java		0
@@ -382,6 +385,9 @@ Patch1000: lsb-headers-3.1.1-mips-support.patch
 Patch101: gcc33-pass-slibdir.patch
 # pass libdir around
 Patch107: gcc33-multi-do-libdir.patch
+
+# fixes to cross gcc avr build
+Patch1001: cross-avr-gcc44-acinclude-regen-hack.patch
 
 # testsuite
 Patch1: gcc33-pr11536-testcase.patch
@@ -1299,6 +1305,10 @@ fi
 perl -pi -e '/^DRIVER_DEFINES/ .. /^gcc/ and s/(\@TARGET_SYSTEM_ROOT_DEFINE\@)/-DSYSROOT_SPEC="\\"\\"" \1/' gcc/Makefile.in
 perl -ni -e '/^m4_define.+AC_LINK/ .. /^m4_defn.+AC_LINK/ or print' config/no-executables.m4
 perl -pi -e 's/^(.+GLIBCXX_IS_NATIVE)=false/\1=true/' libstdc++-v3/configure.ac
+perl -pi -e 's/m4_copy\(\[_AC_PREREQ\], \[AC_PREREQ\]\)/m4_copy_force([_AC_PREREQ], [AC_PREREQ])/' config/override.m4
+perl -pi -e '/^.+m4_define.+_GCC_AUTOCONF_VERSION/ .. /\)/ and s/2.59/2.64/' config/override.m4
+perl -pi -e 's/m4_rename\(\[real_PRECIOUS\],\[_AC_ARG_VAR_PRECIOUS\]\)/m4_rename_force([real_PRECIOUS],[_AC_ARG_VAR_PRECIOUS])/' libgfortran/configure.ac
+%patch1001 -p1
 for d in libiberty libgfortran libstdc++-v3; do
 cd $d
 autoconf
@@ -1416,10 +1426,10 @@ CLOOG_FLAGS="--with-ppl --with-cloog"
 LIBFFI_FLAGS="--disable-libffi"
 %endif
 %if %{build_cross}
-CROSS_FLAGS="--with-build-sysroot=$PWD/../sysroot --with-headers --disable-multilib --disable-nls"
+CROSS_FLAGS="--with-build-sysroot=$PWD/../sysroot --with-headers --disable-nls"
 %endif
 %if %{build_cross_bootstrap}
-CROSS_FLAGS="--disable-multilib --disable-threads"
+CROSS_FLAGS="--disable-threads"
 %if %isarch %{lsb_arches}
 # we have embedded the LSB 3.1 headers, so we can build the unwinding stuff too (ia64)
 CROSS_FLAGS="$CROSS_FLAGS --with-build-sysroot=$PWD/../sysroot --with-headers"
@@ -1470,8 +1480,8 @@ touch ../gcc/c-gperf.h
 %if %{build_cross}
 # (peryvind): xgcc seems to ignore --sysroot, so let's just workaround it for
 # by adding a symlink to the headers since xgcc already passes -isystem ./include
-mkdir -p %{target_cpu}-linux/libgcc
-ln -sf $PWD/../sysroot/usr/include %{target_cpu}-linux/libgcc/include
+mkdir -p %{target_cpu}/libgcc
+ln -sf $PWD/../sysroot/usr/include %{target_cpu}/libgcc/include
 %make
 %else
 # bootstrap-lean is similar to bootstrap except "object files from the stage1
@@ -1647,7 +1657,7 @@ ln -sf %{program_prefix}gcc%{program_long_suffix} %{buildroot}%{_bindir}/%{gcc_t
 ln -sf %{program_prefix}gcc%{program_long_suffix} %{buildroot}%{_bindir}/%{gcc_target_platform}-gcc-%{version}
 %endif
 %if %{build_cxx}
-ln -sf %{program_prefix}g++%{program_long_suffix} %{buildroot}%{_bindir}/c++%{program_long_suffix}
+#ln -sf %{program_prefix}g++%{program_long_suffix} %{buildroot}%{_bindir}/c++%{program_long_suffix}
 ln -sf %{program_prefix}g++%{program_long_suffix} %{buildroot}%{_bindir}/%{gcc_target_platform}-c++%{program_suffix}
 ln -sf %{program_prefix}g++%{program_long_suffix} %{buildroot}%{_bindir}/%{gcc_target_platform}-g++%{program_suffix}
 %endif
@@ -1687,7 +1697,7 @@ STRIP_DEBUG=/bin/true
 if [[ "%{_enable_debug_packages}" != "1" ]]; then
   STRIP_DEBUG="strip -g"
   if [[ "%{_target_cpu}" != "%{target_cpu}" ]]; then
-    STRIP_DEBUG="%{target_cpu}-linux-$STRIP_DEBUG"
+    STRIP_DEBUG="%{target_cpu}-$STRIP_DEBUG"
   fi
 fi
 %endif
@@ -1755,13 +1765,13 @@ pushd $FULLPATH
 	%endif
 	%if %{build_cxx}
 	DispatchLibs libstdc++	%{libstdcxx_major}.0.%{libstdcxx_minor}
-	mv ../../../../..%{target_libdir}/libsupc++.a libsupc++.a
-	%if %isarch %{biarches}
-	mv -f ../../../libsupc++.a 32/libsupc++.a
-	%endif
-	%if %isarch %{nof_arches}
-	mv -f ../../../nof/libsupc++.a nof/libsupc++.a
-	%endif
+	#mv ../../../../..%{target_libdir}/libsupc++.a libsupc++.a
+	#%if %isarch %{biarches}
+	#mv -f ../../../libsupc++.a 32/libsupc++.a
+	#%endif
+	#%if %isarch %{nof_arches}
+	#mv -f ../../../nof/libsupc++.a nof/libsupc++.a
+	#%endif
 	%endif
 	# Make it less hard dependent on libstdc++ 3.4 minor changes
 	%if !%{system_compiler}
@@ -1833,41 +1843,41 @@ mv %{buildroot}%{_prefix}/lib/libgcj.spec $FULLPATH/libgcj.spec
 
 # Move <cxxabi.h> to compiler-specific directories
 %if %{build_cxx}
-mkdir -p $FULLPATH/include/bits/
-mv %{buildroot}%{libstdcxx_includedir}/cxxabi.h $FULLPATH/include/
-mv %{buildroot}%{libstdcxx_includedir}/%{gcc_target_platform}/bits/cxxabi_tweaks.h $FULLPATH/include/bits/
+#mkdir -p $FULLPATH/include/bits/
+#mv %{buildroot}%{libstdcxx_includedir}/cxxabi.h $FULLPATH/include/
+#mv %{buildroot}%{libstdcxx_includedir}/%{gcc_target_platform}/bits/cxxabi_tweaks.h $FULLPATH/include/bits/
 %endif
 
 # Ship with biarch c++config.h headers
-%if %{build_cxx}
-pushd obj-%{gcc_target_platform}
-cxxconfig="`find %{gcc_target_platform}/libstdc++-v3/include -name c++config.h`"
-for i in `find %{gcc_target_platform}/[36]*/libstdc++-v3/include -name c++config.h 2>/dev/null`; do
-  if ! diff -up $cxxconfig $i; then
-    file_32=x file_64=x
-    case $i in
-      %{gcc_target_platform}/32/*) file_32=$i; file_64=$cxxconfig ;;
-      %{gcc_target_platform}/64/*) file_32=$cxxconfig; file_64=$i ;;
-    esac
-    { [[ -f "$file_32" ]] && [[ -f "$file_64" ]]; } ||
-      { echo "c++config.h dispatch error"; exit 1; }
-
-    cat > %{buildroot}%{libstdcxx_includedir}/%{gcc_target_platform}/bits/c++config.h <<EOF
+#%if %{build_cxx}
+#pushd obj-%{gcc_target_platform}
+#cxxconfig="`find %{gcc_target_platform}/libstdc++-v3/include -name c++config.h`"
+#for i in `find %{gcc_target_platform}/[36]*/libstdc++-v3/include -name c++config.h 2>/dev/null`; do
+#  if ! diff -up $cxxconfig $i; then
+#    file_32=x file_64=x
+#    case $i in
+#      %{gcc_target_platform}/32/*) file_32=$i; file_64=$cxxconfig ;;
+#      %{gcc_target_platform}/64/*) file_32=$cxxconfig; file_64=$i ;;
+#    esac
+#    { [[ -f "$file_32" ]] && [[ -f "$file_64" ]]; } ||
+#      { echo "c++config.h dispatch error"; exit 1; }
+#
+#    cat > %{buildroot}%{libstdcxx_includedir}/%{gcc_target_platform}/bits/c++config.h <<EOF
 #ifndef _CPP_CPPCONFIG_WRAPPER
 #define _CPP_CPPCONFIG_WRAPPER 1
 #include <bits/wordsize.h>
 #if __WORDSIZE == 32
-`cat $file_32`
+#`cat $file_32`
 #else
-`cat $file_64`
+#`cat $file_64`
 #endif
 #endif
-EOF
-    break
-  fi
-done
-popd
-%endif
+#EOF
+#    break
+#  fi
+#done
+#popd
+#%endif
 
 # Link gnatgcc to gcc
 %if %{build_ada}
@@ -2278,7 +2288,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 #
 %{_bindir}/%{program_prefix}gcc%{branch}-version
-%{_bindir}/%{program_prefix}gcc%{program_long_suffix}
+#%{_bindir}/%{program_prefix}gcc%{program_long_suffix}
 %{_bindir}/%{gcc_target_platform}-gcc%{program_suffix}
 %{_bindir}/%{gcc_target_platform}-gcc-%{version}
 %{_bindir}/%{program_prefix}gccbug%{program_suffix}
@@ -2312,13 +2322,17 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %dir %{gcc_libdir}/%{gcc_target_platform}/%{version}
 #
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/collect2
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/crt*.o
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/crt*.o
 %if %isarch ppc ppc64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ecrt*.o
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ncrt*.o
 %endif
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
+%if %isarch avr
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcc.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcov.a
+%endif
 %if !%{build_cross_bootstrap}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc_eh.a
 %endif
@@ -2404,6 +2418,9 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/mmintrin-common.h
 %endif
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
+%if %isarch avr
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/tgmath.h
+%endif
 
 %if !%build_libffi && %build_java
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/ffi*.h
@@ -2545,23 +2562,23 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 #
 %ghost %{_bindir}/%{cross_program_prefix}c++
 %{_bindir}/%{program_prefix}g++%{program_long_suffix}
-%{_bindir}/%{program_prefix}c++%{program_long_suffix}
+#%{_bindir}/%{program_prefix}c++%{program_long_suffix}
 %{_bindir}/%{gcc_target_platform}-g++%{program_suffix}
-%{_bindir}/%{gcc_target_platform}-c++%{program_suffix}
+#%{_bindir}/%{gcc_target_platform}-c++%{program_suffix}
 #
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/cc1plus
 # symlinks to gcc3.4 stuff
 %if !%{system_compiler}
 #
 %if %{build_stdcxxheaders}
-%dir %{target_prefix}/include/c++
-%{libstdcxx_includedir}
+#%dir %{target_prefix}/include/c++
+#%{libstdcxx_includedir}
 %endif
 #
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cxxabi.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/bits
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libstdc++.so
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libsupc++.a
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cxxabi.h
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/bits
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/libstdc++.so
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/libsupc++.a
 %if %isarch %{biarches}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/32/libstdc++.so
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/32/libsupc++.a
@@ -2595,8 +2612,8 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 #
 %doc libstdc++-v3/README*
 #
-%dir %{libstdcxx_includedir}
-%{libstdcxx_includedir}/*
+#%dir %{libstdcxx_includedir}
+#%{libstdcxx_includedir}/*
 %ifarch %{spu_arches}
 %exclude %dir %{libstdcxx_includedir}/spu
 %exclude %dir %{libstdcxx_includedir}/spu/bits
@@ -2609,7 +2626,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/bits
 %endif
 #
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libsupc++.a
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/libsupc++.a
 %if %{libc_shared}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libstdc++.so
 %endif
@@ -2633,7 +2650,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 %defattr(-,root,root)
 %doc libstdc++-v3/README
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libstdc++.a
+#%{gcc_libdir}/%{gcc_target_platform}/%{version}/libstdc++.a
 %if %isarch %{biarches}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/32/libstdc++.a
 %endif
