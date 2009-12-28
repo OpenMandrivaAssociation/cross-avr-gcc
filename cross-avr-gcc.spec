@@ -7,7 +7,7 @@
 %define name			%{cross_prefix}gcc%{package_suffix}
 %define branch			4.4
 %define branch_tag		%(perl -e 'printf "%%02d%%02d", split(/\\./,shift)' %{branch})
-%define version			4.4.1
+%define version			4.4.2
 %define snapshot		%nil
 %define release			%{manbo_mkrel 1}
 %define nof_arches		noarch
@@ -18,7 +18,7 @@
 # Define libraries major versions
 %define libgcc_major		1
 %define libstdcxx_major		6
-%define libstdcxx_minor		12
+%define libstdcxx_minor		13
 %define libgfortran_major	3
 %define libgcj_major		10
 %define libobjc_major		2
@@ -435,6 +435,10 @@ Patch211: gcc43-hash-style-gnu.patch
 Patch301: gcc-mips-libjava-interp.patch
 Patch302: gcc_mips_gcc_testsuite_fix_loop.patch
 
+Patch303: gcc-4.3.2-CVE-2009-3736.diff
+
+# (proyvind): set interpreter path used by our uclibc for use with -muclibc
+Patch304: gcc-4.4.2-uclibc-ldso-path.patch
 
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
 # Want updated alternatives priorities
@@ -443,7 +447,7 @@ Conflicts:	gcc-cpp < 3.2.2-4mdk
 %endif
 %define binutils_version 2.16.91.0.2-2mdk
 %if %{use_hash_style_gnu}
-%define binutils_version 2.19.51.0.2-1mnb2
+%define binutils_version 2.20.51.0.4-1mnb2
 %endif
 Requires:	%{cross_prefix}binutils >= %{binutils_version}
 BuildRequires:	%{cross_prefix}binutils >= %{binutils_version}
@@ -1306,7 +1310,7 @@ perl -pi -e '/^DRIVER_DEFINES/ .. /^gcc/ and s/(\@TARGET_SYSTEM_ROOT_DEFINE\@)/-
 perl -ni -e '/^m4_define.+AC_LINK/ .. /^m4_defn.+AC_LINK/ or print' config/no-executables.m4
 perl -pi -e 's/^(.+GLIBCXX_IS_NATIVE)=false/\1=true/' libstdc++-v3/configure.ac
 perl -pi -e 's/m4_copy\(\[_AC_PREREQ\], \[AC_PREREQ\]\)/m4_copy_force([_AC_PREREQ], [AC_PREREQ])/' config/override.m4
-perl -pi -e '/^.+m4_define.+_GCC_AUTOCONF_VERSION/ .. /\)/ and s/2.59/2.64/' config/override.m4
+perl -pi -e '/^.+m4_define.+_GCC_AUTOCONF_VERSION/ .. /\)/ and s/2.59/2.65/' config/override.m4
 perl -pi -e 's/m4_rename\(\[real_PRECIOUS\],\[_AC_ARG_VAR_PRECIOUS\]\)/m4_rename_force([real_PRECIOUS],[_AC_ARG_VAR_PRECIOUS])/' libgfortran/configure.ac
 %patch1001 -p1
 for d in libiberty libgfortran libstdc++-v3; do
@@ -1326,6 +1330,9 @@ perl -pi -e '/^\#define VERSUFFIX/ and s/""/" (%{version}-%{release})"/' gcc/ver
 
 # Fix java-ext path
 sed -i -e 's,\$(jardir)/ext,$(jardir)-ext,g' libjava/Makefile.{am,in}
+
+%patch303 -p0 -b .CVE-2009-3736
+%patch304 -p1 -b .uclibc~
 
 %build
 # FIXME: extra tools needed
