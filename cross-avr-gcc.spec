@@ -9,7 +9,8 @@
 %define branch_tag		%(perl -e 'printf "%%02d%%02d", split(/\\./,shift)' %{branch})
 %define version			4.4.3
 %define snapshot		%nil
-%define release			%{manbo_mkrel 2}
+%define release			%{manbo_mkrel 4}
+# % define release			2
 %define nof_arches		noarch
 %define spu_arches		ppc64
 %define lsb_arches		i386 x86_64 ia64 ppc ppc64 s390 s390x mips mipsel mips64 mips64el
@@ -46,7 +47,7 @@
 
 # Define if building a cross compiler
 # FIXME: assume user does not define both cross and cross_bootstrap variables
-%define build_cross		0
+%define build_cross		1
 %define build_cross_bootstrap	0
 %{expand: %{?cross:		%%global build_cross 1}}
 %{expand: %{?cross_bootstrap:	%%global build_cross_bootstrap 1}}
@@ -74,7 +75,7 @@
 %define package_suffix		%{nil}
 %define program_prefix		%{nil}
 %define program_suffix		%{nil}
-%define program_long_suffix     -%{version}
+%define program_long_suffix	-%{version}
 %else
 %if %{build_cross}
 %define alternative_priority	10%{branch_tag}
@@ -143,9 +144,9 @@
 %define gcc_libdir		%{_prefix}/lib/gcc
 %define gcj_libdir		%{target_libdir}/gcj-%{version}-%{libgcj_major}
 
-%define target_lib             lib
+%define target_lib		lib
 %if %isarch ppc64 sparc64 x86_64 mips64 mips64el
-%define target_lib             lib64
+%define target_lib		lib64
 %endif
 
 %if %isarch x86_64
@@ -194,7 +195,7 @@
 %define build_objc		1
 %define build_objcp		1
 %define build_libmudflap	1
-%define build_libgomp           1
+%define build_libgomp		1
 %define build_libgcj_bc		1
 %define build_libffi		1
 %define build_java		1
@@ -902,7 +903,7 @@ Obsoletes:	%{libgcj_name_orig}%{branch}
 Provides:	%{libgcj_name_orig}%{branch} = %{version}-%{release}
 %if %{build_java}
 BuildRequires:	libxt-devel, libxtst-devel
-BuildRequires:  jpackage-utils
+BuildRequires:	jpackage-utils
 # needed for cairo support (Graphics2D)
 Requires:	gtk+2.0 >= 2.8.0
 BuildRequires:	libgtk+2.0-devel >= 2.8.0
@@ -1467,7 +1468,7 @@ sparc|sparcv9)	TARGET_FLAGS="--with-long-double-128";;
 mips64|mips64el) TARGET_FLAGS="--enable-long-long --with-abi=64";;
 esac
 
-# (anssi) building with external jar fails
+# (ansi) building with external jar fails
 %define python_dir %(echo "%{py_puresitedir}" | sed 's!^%{_prefix}!!g')
 export JAR="no"
 export FASTJAR="no"
@@ -2525,6 +2526,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 
 %if %{build_libgomp}
 %files -n %{libgomp_name}
+%defattr(-,root,root)
 %{target_libdir}/libgomp.so.%{libgomp_major}
 %{target_libdir}/libgomp.so.%{libgomp_major}.0.0
 %if %isarch %{biarches}
@@ -2533,6 +2535,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 
 %files -n %{libgomp_name_orig}-devel
+%defattr(-,root,root)
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgomp.a
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgomp.so
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/omp.h
@@ -3070,6 +3073,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 
 %if %{build_doc}
 %files doc
+%defattr(755,root,root)
 %doc gcc/*ChangeLog*
 %doc libstdc++-v3/doc/html/
 %defattr(-,root,root)
