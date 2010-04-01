@@ -9,7 +9,7 @@
 %define branch_tag		%(perl -e 'printf "%%02d%%02d", split(/\\./,shift)' %{branch})
 %define version			4.4.3
 %define snapshot		%nil
-%define release			%{manbo_mkrel 3}
+%define release			%{manbo_mkrel 4}
 %define nof_arches		noarch
 %define spu_arches		ppc64
 %define lsb_arches		i386 x86_64 ia64 ppc ppc64 s390 s390x mips mipsel mips64 mips64el
@@ -496,7 +496,7 @@ BuildRequires:	autogen
 Obsoletes:	gcc%{branch}
 Provides:	gcc%{branch} = %{version}-%{release}
 %else
-Conflicts:	gcc%{branch} < %{version}-%{release}
+#Conflicts:	gcc%{branch} < %{version}-%{release}
 %endif
 %if "%{_real_vendor}" == "manbo"
 Requires:	manbo-files-gcc%{program_suffix} = %{version}
@@ -547,7 +547,7 @@ Group:		Development/C++
 Obsoletes:	gcc%{branch}-c++
 Provides:	gcc%{branch}-c++ = %{version}-%{release}
 %else
-Conflicts:	gcc%{branch}-c++ < %{version}-%{release}
+#Conflicts:	gcc%{branch}-c++ < %{version}-%{release}
 %endif
 Requires:	%{name} = %{version}-%{release}
 %if "%{_real_vendor}" == "manbo"
