@@ -17,6 +17,7 @@
 
 # Define libraries major versions
 %define libgcc_major		1
+%define libavr_major		0
 %define libstdcxx_major		6
 %define libstdcxx_minor		13
 %define libgfortran_major	3
@@ -333,6 +334,8 @@
 # Define library packages names
 %define libgcc_name_orig	%{cross_prefix}libgcc
 %define libgcc_name		%{libgcc_name_orig}%{libgcc_major}
+%define libavr_name_origi	%{cross_prefix}libavr
+%define libavr_name		%{libavr_name_orig}%{libavr_major}
 %define libstdcxx_name_orig	%{cross_prefix}libstdc++
 %define libstdcxx_name		%{libstdcxx_name_orig}%{libstdcxx_major}
 %define libgfortran_name_orig	%{cross_prefix}libgfortran
@@ -495,8 +498,6 @@ BuildRequires:	autogen
 %if %{system_compiler}
 Obsoletes:	gcc%{branch}
 Provides:	gcc%{branch} = %{version}-%{release}
-%else
-#Conflicts:	gcc%{branch} < %{version}-%{release}
 %endif
 %if "%{_real_vendor}" == "manbo"
 Requires:	manbo-files-gcc%{program_suffix} = %{version}
@@ -647,6 +648,22 @@ AutoProv:	false
 %description -n %{libstdcxx_name_orig}-static-devel
 This is the GNU implementation of the standard C++ libraries.  This
 package includes the static libraries needed for C++ development.
+
+##################################################################
+
+%package -n libavr-devel
+Summary:        Static libraries for C development
+Group:          System/Libraries
+Provides:       libavr%{branch}-devel = %{version}-%{release}
+%if %{build_cross}
+AutoReq:        false
+AutoProv:       false
+%endif
+
+%description -n libavr-devel
+This include the standard headers and libraries needed for
+the Atmel platform cross compiler.
+
 
 ####################################################################
 # Objective C Compiler
@@ -1142,6 +1159,7 @@ Provides:	gcc%{branch}-cpp = %{version}-%{release}
 %endif
 Requires(post): update-alternatives
 Requires(postun): update-alternatives
+Requires:	libavr%{branch}-devel = %{version}-%{release}
 
 %description cpp
 The C preprocessor is a 'macro processor' which is used automatically
@@ -2331,12 +2349,6 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ecrt*.o
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ncrt*.o
 %endif
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
-%if %isarch avr
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcc.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcov.a
-%endif
 %if !%{build_cross_bootstrap}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc_eh.a
 %endif
@@ -2367,7 +2379,6 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 #
 %dir %{gcc_libdir}/%{gcc_target_platform}/%{version}/include
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
 %if %isarch %{ix86} x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/ammintrin.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/nmmintrin.h
@@ -2405,25 +2416,28 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %if %isarch armel armeb
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/mmintrin.h
 %endif
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
 %if %isarch %{ix86} x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cross-stdarg.h
 %endif
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
 %if %isarch i386 x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/bmmintrin.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cpuid.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/mmintrin-common.h
 %endif
+%if %isarch !%{avr}
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
-%if %isarch avr
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/tgmath.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
 %endif
 
 %if !%build_libffi && %build_java
@@ -2648,6 +2662,26 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/nof/libstdc++.so
 %endif
 %endif
+%endif
+
+%if %{build_cross || build_cross_bootstrap}
+%files -n libavr-devel
+%defattr(-,root,root)
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcc.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcov.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/tgmath.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
 %endif
 
 %if %{build_libstdcxx}
