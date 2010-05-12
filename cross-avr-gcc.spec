@@ -17,7 +17,6 @@
 
 # Define libraries major versions
 %define libgcc_major		1
-%define libavr_major		0
 %define libstdcxx_major		6
 %define libstdcxx_minor		13
 %define libgfortran_major	3
@@ -334,8 +333,6 @@
 # Define library packages names
 %define libgcc_name_orig	%{cross_prefix}libgcc
 %define libgcc_name		%{libgcc_name_orig}%{libgcc_major}
-%define libavr_name_origi	%{cross_prefix}libavr
-%define libavr_name		%{libavr_name_orig}%{libavr_major}
 %define libstdcxx_name_orig	%{cross_prefix}libstdc++
 %define libstdcxx_name		%{libstdcxx_name_orig}%{libstdcxx_major}
 %define libgfortran_name_orig	%{cross_prefix}libgfortran
@@ -651,21 +648,6 @@ package includes the static libraries needed for C++ development.
 
 ##################################################################
 
-%package -n libavr-devel
-Summary:        Static libraries for C development
-Group:          System/Libraries
-Provides:       libavr%{branch}-devel = %{version}-%{release}
-%if %{build_cross}
-AutoReq:        false
-AutoProv:       false
-%endif
-
-%description -n libavr-devel
-This include the standard headers and libraries needed for
-the Atmel platform cross compiler.
-
-
-####################################################################
 # Objective C Compiler
 
 %package objc
@@ -1159,7 +1141,6 @@ Provides:	gcc%{branch}-cpp = %{version}-%{release}
 %endif
 Requires(post): update-alternatives
 Requires(postun): update-alternatives
-Requires:	libavr%{branch}-devel = %{version}-%{release}
 
 %description cpp
 The C preprocessor is a 'macro processor' which is used automatically
@@ -2665,7 +2646,6 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 
 %if %{build_cross || build_cross_bootstrap}
-%files -n libavr-devel
 %defattr(-,root,root)
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
