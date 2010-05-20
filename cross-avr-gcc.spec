@@ -9,7 +9,7 @@
 %define branch_tag		%(perl -e 'printf "%%02d%%02d", split(/\\./,shift)' %{branch})
 %define version			4.4.3
 %define snapshot		%nil
-%define release			%{manbo_mkrel 5}
+%define release			%{manbo_mkrel 6}
 %define nof_arches		noarch
 %define spu_arches		ppc64
 %define lsb_arches		i386 x86_64 ia64 ppc ppc64 s390 s390x mips mipsel mips64 mips64el
@@ -495,6 +495,8 @@ BuildRequires:	autogen
 %if %{system_compiler}
 Obsoletes:	gcc%{branch}
 Provides:	gcc%{branch} = %{version}-%{release}
+%else
+#Conflicts:	gcc%{branch} < %{version}-%{release}
 %endif
 %if "%{_real_vendor}" == "manbo"
 Requires:	manbo-files-gcc%{program_suffix} = %{version}
@@ -646,8 +648,7 @@ AutoProv:	false
 This is the GNU implementation of the standard C++ libraries.  This
 package includes the static libraries needed for C++ development.
 
-##################################################################
-
+####################################################################
 # Objective C Compiler
 
 %package objc
@@ -2330,6 +2331,12 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ecrt*.o
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/ncrt*.o
 %endif
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
+%if %isarch avr
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcc.a
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcov.a
+%endif
 %if !%{build_cross_bootstrap}
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc_eh.a
 %endif
@@ -2360,6 +2367,7 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %endif
 #
 %dir %{gcc_libdir}/%{gcc_target_platform}/%{version}/include
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
 %if %isarch %{ix86} x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/ammintrin.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/nmmintrin.h
@@ -2397,28 +2405,25 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %if %isarch armel armeb
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/mmintrin.h
 %endif
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
 %if %isarch %{ix86} x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cross-stdarg.h
 %endif
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
 %if %isarch i386 x86_64
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/bmmintrin.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/cpuid.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/mmintrin-common.h
 %endif
-%if %isarch !%{avr}
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
+%if %isarch avr
+%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/tgmath.h
 %endif
 
 %if !%build_libffi && %build_java
@@ -2643,25 +2648,6 @@ if [ "$1" = "0" ];then /sbin/install-info %{_infodir}/gcc%{_package_suffix}.info
 %{gcc_libdir}/%{gcc_target_platform}/%{version}/nof/libstdc++.so
 %endif
 %endif
-%endif
-
-%if %{build_cross || build_cross_bootstrap}
-%defattr(-,root,root)
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcc.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/libgcov.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcc.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/avr*/libgcov.a
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/tgmath.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdbool.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/syslimits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/varargs.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/limits.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdarg.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stdfix.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/iso646.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/stddef.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/unwind.h
-%{gcc_libdir}/%{gcc_target_platform}/%{version}/include/float.h
 %endif
 
 %if %{build_libstdcxx}
