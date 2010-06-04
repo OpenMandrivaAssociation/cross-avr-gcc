@@ -1140,7 +1140,7 @@ Group:		Development/C
 Obsoletes:	gcc%{branch}-cpp
 Provides:	gcc%{branch}-cpp = %{version}-%{release}
 %endif
-Requires:	avr-libc <= 1.6.8
+Requires:	avr-libc >= 1.6.8
 Requires(post): update-alternatives
 Requires(postun): update-alternatives
 
