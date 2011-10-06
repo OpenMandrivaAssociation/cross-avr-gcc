@@ -11,8 +11,8 @@ URL:            http://gcc.gnu.org/
 Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-core-%{version}.tar.bz2
 Source1:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-g++-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
-BuildRequires:  cross-%{target}-binutils >= 2.13, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
-Requires:       cross-%{target}-binutils >= 2.13
+BuildRequires:  cross-%{target}-binutils >= 2.21.1-1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
+Requires:       cross-%{target}-binutils >= 2.21.1-1
 
 %description
 This is a Cross Compiling version of GNU GCC, which can be used to
