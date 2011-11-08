@@ -1,9 +1,9 @@
 %define target		avr
 %define Werror_cflags	-Wformat
-%define rel		2
+%define rel		1
 
 Name:           cross-%{target}-gcc
-Version:        4.6.1
+Version:        4.6.2
 Release:        %mkrel %rel
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C
@@ -12,7 +12,6 @@ URL:            http://gcc.gnu.org/
 Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-core-%{version}.tar.bz2
 Source1:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-g++-%{version}.tar.bz2
 Patch0:		cross-avr-gcc-4.6.1-mint8.patch
-Patch1:		cross-avr-gcc-4.6.1-progmem.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildRequires:  cross-%{target}-binutils >= 2.21.1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
 Requires:       cross-%{target}-binutils >= 2.21.1
@@ -40,7 +39,6 @@ platform.
 pushd gcc-%{?snapshot}%{!?snapshot:%version}
 
 %patch0
-%patch1
 
 contrib/gcc_update --touch
 popd
