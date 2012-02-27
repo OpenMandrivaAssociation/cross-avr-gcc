@@ -1,6 +1,6 @@
 %define target		avr
 %define Werror_cflags	-Wformat
-%define rel		1
+%define rel		2
 
 Name:           cross-%{target}-gcc
 Version:        4.6.2
@@ -15,6 +15,8 @@ Patch0:		cross-avr-gcc-4.6.1-mint8.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildRequires:  cross-%{target}-binutils >= 2.21.1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
 Requires:       cross-%{target}-binutils >= 2.21.1
+Obsoletes:      %{name}-cpp < %{version}
+Provides:       %{name}-cpp = %{EVRD}
 
 %description
 This is a Cross Compiling version of GNU GCC, which can be used to
