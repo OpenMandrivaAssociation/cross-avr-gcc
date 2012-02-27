@@ -12,7 +12,6 @@ URL:            http://gcc.gnu.org/
 Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-core-%{version}.tar.bz2
 Source1:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-g++-%{version}.tar.bz2
 Patch0:		cross-avr-gcc-4.6.1-mint8.patch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildRequires:  cross-%{target}-binutils >= 2.21.1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
 Requires:       cross-%{target}-binutils >= 2.21.1
 Obsoletes:      %{name}-cpp < %{version}
@@ -98,19 +97,10 @@ rm -rf %{buildroot}%{_libexecdir}/gcc/%{target}/%{version}/install-tools
 %define __os_install_post . ./os_install_post
 
 
-%clean
-rm -rf %{buildroot}
-
-
 %files
 %defattr(-,root,root,-)
 %doc gcc-%{version}/COPYING gcc-%{version}/COPYING.LIB
 %{_bindir}/%{target}-*
-%dir /usr/lib/gcc
-%dir /usr/lib/gcc/%{target}
-/usr/lib/gcc/%{target}/%{version}
-%dir %{_libexecdir}/gcc
-%dir %{_libexecdir}/gcc/%{target}
 %{_libexecdir}/gcc/%{target}/%{version}
 %{_mandir}/man1/%{target}-*.1.xz
 %exclude %{_bindir}/%{target}-?++
