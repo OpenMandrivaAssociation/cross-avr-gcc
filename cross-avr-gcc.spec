@@ -1,6 +1,10 @@
 %define target		avr
 %define Werror_cflags	-Wformat
-%define rel		2
+%define rel		3
+
+# This is a ugly workaround for not listing all files in /usr/lib and %%{_libexecdir}
+# Don't remove it until you are going to support this package in future
+%define _files_listed_twice_terminate_build	0
 
 Name:           cross-%{target}-gcc
 Version:        4.6.2
@@ -101,6 +105,11 @@ rm -rf %{buildroot}%{_libexecdir}/gcc/%{target}/%{version}/install-tools
 %defattr(-,root,root,-)
 %doc gcc-%{version}/COPYING gcc-%{version}/COPYING.LIB
 %{_bindir}/%{target}-*
+%dir /usr/lib/gcc
+%dir /usr/lib/gcc/%{target}
+/usr/lib/gcc/%{target}/%{version}
+%dir %{_libexecdir}/gcc
+%dir %{_libexecdir}/gcc/%{target}
 %{_libexecdir}/gcc/%{target}/%{version}
 %{_mandir}/man1/%{target}-*.1.xz
 %exclude %{_bindir}/%{target}-?++
