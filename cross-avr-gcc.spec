@@ -1,13 +1,13 @@
 %define target		avr
 %define Werror_cflags	-Wformat
-%define rel		3
+%define rel		1
 
 # This is a ugly workaround for not listing all files in /usr/lib and %%{_libexecdir}
 # Don't remove it until you are going to support this package in future
 %define _files_listed_twice_terminate_build	0
 
 Name:           cross-%{target}-gcc
-Version:        4.6.2
+Version:        4.6.3
 Release:        %mkrel %rel
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C
