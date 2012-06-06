@@ -7,14 +7,13 @@
 %define _files_listed_twice_terminate_build	0
 
 Name:           cross-%{target}-gcc
-Version:        4.6.3
+Version:        4.7.0
 Release:        %mkrel %rel
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C
 License:        GPLv2+
 URL:            http://gcc.gnu.org/
-Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-core-%{version}.tar.bz2
-Source1:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-g++-%{version}.tar.bz2
+Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-%{version}.tar.bz2
 Patch0:		cross-avr-gcc-4.6.1-mint8.patch
 BuildRequires:  cross-%{target}-binutils >= 2.21.1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
 Requires:       cross-%{target}-binutils >= 2.21.1
@@ -39,14 +38,11 @@ platform.
 
 
 %prep
-%setup -q -c
-%setup -q -c -a 1
-pushd gcc-%{?snapshot}%{!?snapshot:%version}
+%setup -q -n gcc-%{version}
 
 %patch0
 
 contrib/gcc_update --touch
-popd
 
 # Extract %%__os_install_post into os_install_post~
 cat << \EOF > os_install_post~
@@ -73,20 +69,25 @@ sed -e 's,^[ ]*/usr/lib/rpm.*/brp-strip,./brp-strip,' \
 mkdir -p gcc-%{target}
 pushd gcc-%{target}
 CC="%{__cc} %optflags" \
-../gcc-%{version}/configure --prefix=%{_prefix} --mandir=%{_mandir} \
-  --infodir=%{_infodir} --target=%{target} --enable-languages=c,c++ \
-  --disable-nls --disable-libssp --with-system-zlib \
-  --enable-version-specific-runtime-libs \
-  --with-pkgversion="Mandriva %{version}-%{release}" \
-  --with-bugurl="https://qa.mandriva.com/" \
-  --libexecdir=%{_libexecdir}
+../configure \
+	--prefix=%{_prefix} \
+	--mandir=%{_mandir} \
+	--infodir=%{_infodir} \
+	--target=%{target} \
+	--enable-languages=c,c++ \
+	--disable-nls \
+	--disable-libssp \
+	--with-system-zlib \
+	--enable-version-specific-runtime-libs \
+	--with-pkgversion="Mandriva %{version}-%{release}" \
+	--with-bugurl="https://qa.mandriva.com/" \
+	--libexecdir=%{_libexecdir}
 # In general, building GCC is not smp-safe
 make
 popd
 
 
 %install
-rm -rf %{buildroot}
 pushd gcc-%{target}
 make install DESTDIR=%{buildroot}
 popd
@@ -103,7 +104,7 @@ rm -rf %{buildroot}%{_libexecdir}/gcc/%{target}/%{version}/install-tools
 
 %files
 %defattr(-,root,root,-)
-%doc gcc-%{version}/COPYING gcc-%{version}/COPYING.LIB
+%doc COPYING COPYING.LIB
 %{_bindir}/%{target}-*
 %dir /usr/lib/gcc
 %dir /usr/lib/gcc/%{target}
