@@ -1,14 +1,13 @@
 %define target		avr
 %define Werror_cflags	-Wformat
-%define rel		1
 
 # This is a ugly workaround for not listing all files in /usr/lib and %%{_libexecdir}
 # Don't remove it until you are going to support this package in future
 %define _files_listed_twice_terminate_build	0
 
 Name:           cross-%{target}-gcc
-Version:        4.7.0
-Release:        %mkrel %rel
+Version:        4.7.2
+Release:        1
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C
 License:        GPLv2+
@@ -29,7 +28,7 @@ native %{_arch} platform.
 %package c++
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C++
-Requires:       %{name} = %{version}-%{release}
+Requires:       %{name} = %{EVRD}
 
 %description c++
 This package contains the Cross Compiling version of g++, which can be used to
@@ -55,7 +54,7 @@ case $a in
 # Prevent brp-strip* from trying to handle foreign binaries
 */brp-strip*)
   b=$(basename $a)
-  sed -e 's,find %{buildroot},find %{buildroot}%_bindir %{buildroot}%_libexecdir,' $a > $b
+  sed -e 's,find %{buildroot},find %{buildroot}%{_bindir} %{buildroot}%{_libexecdir},' $a > $b
   chmod a+x $b
   ;;
 esac
@@ -79,7 +78,7 @@ CC="%{__cc} %optflags" \
 	--disable-libssp \
 	--with-system-zlib \
 	--enable-version-specific-runtime-libs \
-	--with-pkgversion="Mandriva %{version}-%{release}" \
+	--with-pkgversion="Mandriva %{EVRD}" \
 	--with-bugurl="https://qa.mandriva.com/" \
 	--libexecdir=%{_libexecdir}
 # In general, building GCC is not smp-safe
