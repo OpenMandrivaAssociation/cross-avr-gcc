@@ -7,7 +7,7 @@
 
 Name:           cross-%{target}-gcc
 Version:        4.7.2
-Release:        1
+Release:        2
 Summary:        Cross Compiling GNU GCC targeted at %{target}
 Group:          Development/C
 License:        GPLv2+
