@@ -14,6 +14,7 @@ License:        GPLv2+
 URL:            https://gcc.gnu.org/
 Source0:        ftp://ftp.gnu.org/gnu/gcc/gcc-%{version}/gcc-%{version}.tar.bz2
 Patch0:		cross-avr-gcc-4.6.1-mint8.patch
+BuildRequires:	make
 BuildRequires:  cross-%{target}-binutils >= 2.21.1, zlib-devel gawk gmp-devel mpfr-devel libmpc-devel
 Requires:       cross-%{target}-binutils >= 2.21.1
 Obsoletes:      %{name}-cpp < %{version}
